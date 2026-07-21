@@ -467,7 +467,7 @@
           <button type="submit" class="btn-primary">Send booking request</button>
         </div>
         <div id="formStatus"></div>
-        <p class="form-note">Your request goes straight to the owner for confirmation.</p>
+        <p class="form-note">Your request goes straight to the owner for confirmation. Please check your spam/junk inbox for our emails.</p>
       </form>
     </div>
   </div>
@@ -727,7 +727,7 @@
         submitBtn.textContent = 'Send booking request';
         if(res.ok){
           status.className = 'ok';
-          status.textContent = 'Request sent! We\'ll confirm your dates by email shortly.';
+          status.textContent = 'Request sent! We\'ll confirm your dates by email shortly. Please check your spam/junk inbox if you don\'t see it.';
           this.reset();
           document.getElementById('companyField').classList.remove('hidden');
           selStart = null; selEnd = null;
