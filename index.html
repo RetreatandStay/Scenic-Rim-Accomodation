@@ -23,9 +23,9 @@
   "@type": "LodgingBusiness",
   "name": "Scenic Rim Accommodation: Kalbar Duplex",
   "alternateName": "Kalbar Duplex House, Fassifern Region Accommodation",
-  "description": "Self-contained duplex house in Kalbar, Fassifern Region of the Scenic Rim, QLD. Two units side-by-side, sleeps up to 8 each (4 queen beds), full kitchen, off-street parking. No short stays: 1-month minimum for company/crew accommodation, 14-night minimum for holiday stays. Long stay and workers accommodation, direct booking.",
+  "description": "Self-contained duplex house in Kalbar, Fassifern Region of the Scenic Rim, QLD. Two units side-by-side, sleeps up to 8 each (4 queen beds), full kitchen, off-street parking. No short stays: 7-night minimum, with better weekly rates the longer you stay. Long stay and workers accommodation, direct booking.",
   "url": "https://scenicrimaccommodation.com/",
-  "priceRange": "Per unit. Holiday: $4,500 AUD per 14 nights (includes utilities), $350 AUD/night thereafter. Company/crew: $5,000 AUD/month plus utilities, 1-month minimum.",
+  "priceRange": "Per unit, per week, AUD. 7-13 nights: $1,800/week. 14-27 nights: $1,500/week. Monthly (28-34 nights): $1,300/week. Longer than monthly (35+ nights): $1,000/week.",
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Kalbar",
@@ -155,7 +155,7 @@
   .gym-callout a{color:var(--accent);font-weight:600;text-decoration:underline;}
 
   .stay-types{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
-  .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1080px;margin:0 auto;}
+  .type-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:1080px;margin:0 auto;}
   .type-card{
     border:1px solid var(--border);border-radius:12px;padding:28px;background:var(--bg);
   }
@@ -273,7 +273,7 @@
     <nav class="nav-links">
       <a href="#gallery">Gallery</a>
       <a href="#about">The Duplex</a>
-      <a href="#stay-types">Company / Holiday</a>
+      <a href="#stay-types">Pricing</a>
       <a href="#book">Availability</a>
     </nav>
     <a href="#book" class="nav-cta">Check availability</a>
@@ -322,7 +322,7 @@
       <div class="eyebrow">The Kalbar Duplex House</div>
       <h2>Long stay and workers accommodation, built for crews. Just as good for a holiday.</h2>
       <p>Two self-contained units side-by-side, each with its own full kitchen and 4 queen beds, sleeping up to 8 people. Off-street parking easily fits work vehicles, and each stay includes a complimentary gym membership. This duplex house is a popular choice for workers accommodation and long stay bookings across the Scenic Rim and Fassifern Region.</p>
-      <p>Close to Kalbar township, an easy walk to shops and takeaway, in the heart of the Fassifern Valley. No short stays: company and crew bookings have a 1-month minimum, holiday stays have a 14-night minimum.</p>
+      <p>Close to Kalbar township, an easy walk to shops and takeaway, in the heart of the Fassifern Valley. No short stays: 7-night minimum, and the longer you stay the better the weekly rate.</p>
     </div>
     <div class="details-card">
       <h3>Property details</h3>
@@ -330,19 +330,19 @@
       <div class="detail-row"><span class="k">Sleeps</span><span class="v">Up to 8 per unit (4 queen beds)</span></div>
       <div class="detail-row"><span class="k">Parking</span><span class="v">Off-street, work vehicles OK</span></div>
       <div class="detail-row"><span class="k">Kitchen</span><span class="v">Full kitchen, each unit</span></div>
-      <div class="detail-row"><span class="k">Minimum stay</span><span class="v">1 month (company), 14 nights (holiday)</span></div>
+      <div class="detail-row"><span class="k">Minimum stay</span><span class="v">7 nights</span></div>
       <div class="detail-row"><span class="k">Gym membership</span><span class="v"><a href="https://www.boonahhealthhub.com.au" target="_blank" rel="noopener noreferrer">Included ↗</a></span></div>
       <div class="detail-row"><span class="k">Location</span><span class="v">Kalbar, Fassifern Region, Scenic Rim QLD</span></div>
     </div>
   </div>
 
   <div class="gym-callout pricing-callout">
-    <h3>Pricing (per unit)</h3>
-    <p>No short stays. Rates below are per unit, the duplex has 2 units, so booking both doubles the rate. Rates and minimum stays also differ depending on whether it's company/crew accommodation or a holiday stay.</p>
-    <div class="detail-row"><span class="k">Company / crew, per unit per month</span><span class="v">$5,000/month + utilities</span></div>
-    <div class="detail-row"><span class="k">Holiday, per unit, first 14 nights</span><span class="v">$4,500 total, includes utilities</span></div>
-    <div class="detail-row"><span class="k">Holiday, per unit, each night after 14</span><span class="v">$350 / night</span></div>
-    <div class="detail-row"><span class="k">Longer stays</span><span class="v">Contact the owner to discuss a rate</span></div>
+    <h3>Pricing (per unit, per week)</h3>
+    <p>No short stays, 7-night minimum. Rates below are per unit, the duplex has 2 units, so booking both doubles the rate. The longer you stay, the lower the weekly rate.</p>
+    <div class="detail-row"><span class="k">7-13 nights</span><span class="v">$1,800 / week</span></div>
+    <div class="detail-row"><span class="k">14-27 nights</span><span class="v">$1,500 / week</span></div>
+    <div class="detail-row"><span class="k">Monthly (28-34 nights)</span><span class="v">$1,300 / week</span></div>
+    <div class="detail-row"><span class="k">Longer than monthly (35+ nights)</span><span class="v">$1,000 / week</span></div>
   </div>
 
   <div class="gym-callout">
@@ -353,32 +353,49 @@
 
 <section id="stay-types" class="stay-types">
   <div class="section-head">
-    <div class="eyebrow">Two ways to stay</div>
-    <h2>Company accommodation or holiday stay</h2>
-    <p>Same property, two booking paths. Pick the one that fits, then choose it again in the booking form below. All rates are per unit.</p>
+    <div class="eyebrow">Pricing</div>
+    <h2>Stay longer, pay less per week</h2>
+    <p>Same property, one simple booking path, for holidaymakers, crews and companies alike. All rates are per unit, per week. 7-night minimum.</p>
   </div>
   <div class="type-grid">
     <div class="type-card company">
-      <div class="tag">Company / Crew</div>
-      <h3>Company Accommodation</h3>
-      <p>For businesses housing workers on a regional project. Simple, direct paperwork and one point of contact. No short stays, 1-month minimum.</p>
+      <div class="tag">7-13 nights</div>
+      <h3>$1,800 / week</h3>
       <ul>
-        <li>1-month minimum, project-length stays</li>
-        <li>$5,000/month per unit, plus utilities</li>
-        <li>Secure off-street parking for work vehicles</li>
-        <li>Invoicing direct with the owner</li>
+        <li>7-night minimum stay</li>
+        <li>Full kitchen &amp; self-contained unit, sleeps up to 8</li>
+        <li>Off-street parking, work vehicles OK</li>
+        <li>Gym membership included</li>
       </ul>
     </div>
     <div class="type-card holiday">
-      <div class="tag">Holiday</div>
-      <h3>Holiday Accommodation</h3>
-      <p>A comfortable, fully self-contained base for exploring the Scenic Rim, with the same duplex and the same 14-night minimum. No short stays.</p>
+      <div class="tag">14-27 nights</div>
+      <h3>$1,500 / week</h3>
       <ul>
-        <li>14-night minimum, no short stays</li>
-        <li>$4,500 per unit for the first 14 nights, includes utilities</li>
-        <li>$350/night per unit for each night beyond 14</li>
+        <li>Lower weekly rate for a two-week-plus stay</li>
         <li>Full kitchen &amp; self-contained unit, sleeps up to 8</li>
-        <li>Gym membership included with every stay</li>
+        <li>Off-street parking, work vehicles OK</li>
+        <li>Gym membership included</li>
+      </ul>
+    </div>
+    <div class="type-card company">
+      <div class="tag">Monthly (28-34 nights)</div>
+      <h3>$1,300 / week</h3>
+      <ul>
+        <li>A full month, project-length stays</li>
+        <li>Full kitchen &amp; self-contained unit, sleeps up to 8</li>
+        <li>Off-street parking, work vehicles OK</li>
+        <li>Gym membership included</li>
+      </ul>
+    </div>
+    <div class="type-card holiday">
+      <div class="tag">Longer than monthly (35+ nights)</div>
+      <h3>$1,000 / week</h3>
+      <ul>
+        <li>Best rate, for extended and ongoing stays</li>
+        <li>Full kitchen &amp; self-contained unit, sleeps up to 8</li>
+        <li>Off-street parking, work vehicles OK</li>
+        <li>Gym membership included</li>
       </ul>
     </div>
   </div>
@@ -388,7 +405,7 @@
   <div class="section-head">
     <div class="eyebrow">Availability</div>
     <h2>Check dates &amp; make a booking request</h2>
-    <p>Select a unit, pick your dates on the calendar, then fill in your details. No short stays: 1-month minimum for company/crew, 14 nights for holiday stays. This sends a booking request, and nothing is charged automatically.</p>
+    <p>Select a unit, pick your dates on the calendar, then fill in your details. No short stays, 7-night minimum. Bookings open from 30 October 2026. Submit your requested dates and the owner will contact you to confirm, nothing is charged automatically.</p>
   </div>
 
   <div class="booking-grid">
@@ -419,24 +436,8 @@
     <div class="panel">
       <h3>2. Your details</h3>
       <form id="bookingForm">
-        <label>Booking type</label>
-        <div class="radio-row">
-          <label class="radio-opt active" data-type-opt="company">
-            <input type="radio" name="stayType" value="Company / Crew Accommodation" checked>
-            <div class="rt">Company</div>
-            <div class="rs">Crew / project</div>
-          </label>
-          <label class="radio-opt" data-type-opt="holiday">
-            <input type="radio" name="stayType" value="Holiday Accommodation">
-            <div class="rt">Holiday</div>
-            <div class="rs">Personal stay</div>
-          </label>
-        </div>
-
-        <div id="companyField">
-          <label>Company name</label>
-          <input type="text" id="companyName" placeholder="e.g. Acme Contracting">
-        </div>
+        <label>Company name (if applicable)</label>
+        <input type="text" id="companyName" placeholder="e.g. Acme Contracting">
 
         <div class="two-col">
           <div>
@@ -494,8 +495,8 @@
   // ---- CONFIG ----
   const SITE_CONTACT_EMAIL = "retreatandstay@outlook.com";
   const API_URL = "https://script.google.com/macros/s/AKfycbzvproEp7vxSFLHOjqVoJpYU3MaN88Uh_o9AExijnnum2k6Xl9JXRUJnCQVsekHPAQ/exec";
-  const MIN_NIGHTS_HOLIDAY = 14;
-  const MIN_NIGHTS_COMPANY = 28; // 1-month minimum, counted as 4 weeks
+  const MIN_NIGHTS = 7;
+  const BOOKINGS_OPEN_DATE = new Date(2026, 9, 30); // 30 October 2026
   // Fallback only. Once API_URL is set, real confirmed bookings come from the sheet automatically.
   const blockedDates = {
     unit1: [],
@@ -506,19 +507,16 @@
   document.getElementById('footerEmail').textContent = SITE_CONTACT_EMAIL;
   const apiConfigured = API_URL && API_URL.indexOf('PASTE_YOUR') === -1;
 
-  function getMinNights(){
-    const checked = document.querySelector('input[name="stayType"]:checked');
-    return (checked && checked.value.indexOf('Holiday') !== -1) ? MIN_NIGHTS_HOLIDAY : MIN_NIGHTS_COMPANY;
-  }
-
   let currentUnit = 'unit1';
   let viewYear, viewMonth;
   let selStart = null, selEnd = null;
 
   const today = new Date();
   today.setHours(0,0,0,0);
-  viewYear = today.getFullYear();
-  viewMonth = today.getMonth();
+  BOOKINGS_OPEN_DATE.setHours(0,0,0,0);
+  const calendarStart = BOOKINGS_OPEN_DATE > today ? BOOKINGS_OPEN_DATE : today;
+  viewYear = calendarStart.getFullYear();
+  viewMonth = calendarStart.getMonth();
 
   const dowLabels = ['S','M','T','W','T','F','S'];
 
@@ -532,7 +530,7 @@
     return blockedDates[currentUnit].includes(fmtISO(d));
   }
   function isPast(d){
-    return d < today;
+    return d < calendarStart;
   }
 
   function buildMonthGrid(year, month){
@@ -606,7 +604,7 @@
       return;
     }
     const nights = Math.round((selEnd - selStart) / 86400000);
-    const minNights = getMinNights();
+    const minNights = MIN_NIGHTS;
     if(nights < minNights){
       box.className = 'selection-summary warn';
       box.textContent = nights + ' night' + (nights===1?'':'s') + ' selected, minimum stay is ' + minNights + ' nights. Please choose a later check-out date.';
@@ -640,17 +638,6 @@
     });
   });
 
-  document.querySelectorAll('.radio-opt').forEach(opt => {
-    opt.addEventListener('click', () => {
-      document.querySelectorAll('.radio-opt').forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-      opt.querySelector('input').checked = true;
-      const isCompany = opt.dataset.typeOpt === 'company';
-      document.getElementById('companyField').classList.toggle('hidden', !isCompany);
-      renderSummary();
-    });
-  });
-
   function fetchAvailability(){
     if(!apiConfigured) return;
     fetch(API_URL)
@@ -670,7 +657,6 @@
   document.getElementById('bookingForm').addEventListener('submit', function(e){
     e.preventDefault();
     const status = document.getElementById('formStatus');
-    const stayType = document.querySelector('input[name="stayType"]:checked').value;
     const companyName = document.getElementById('companyName').value.trim();
     const fullName = document.getElementById('fullName').value.trim();
     const guestCount = document.getElementById('guestCount').value.trim();
@@ -684,7 +670,7 @@
       return;
     }
     const nights = Math.round((selEnd - selStart) / 86400000);
-    const minNights = getMinNights();
+    const minNights = MIN_NIGHTS;
     if(nights < minNights){
       status.className = 'err';
       status.textContent = 'Minimum stay is ' + minNights + ' nights. Please adjust your dates.';
@@ -699,7 +685,6 @@
     const unitLabel = currentUnit === 'unit1' ? 'Unit 1' : 'Unit 2';
     const payload = {
       unit: unitLabel,
-      stayType: stayType,
       companyName: companyName,
       fullName: fullName,
       email: email,
@@ -727,9 +712,8 @@
         submitBtn.textContent = 'Send booking request';
         if(res.ok){
           status.className = 'ok';
-          status.textContent = 'Request sent! We\'ll confirm your dates by email shortly. Please check your spam/junk inbox if you don\'t see it.';
+          status.textContent = 'Request sent! The owner will contact you to confirm. Please check your spam/junk inbox if you don\'t see our email.';
           this.reset();
-          document.getElementById('companyField').classList.remove('hidden');
           selStart = null; selEnd = null;
           renderCalendar();
         } else {
