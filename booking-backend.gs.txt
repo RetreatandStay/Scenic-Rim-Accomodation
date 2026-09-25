@@ -1,0 +1,335 @@
+/**
+ * SCENIC RIM ACCOMMODATION — BOOKING BACKEND (Google Apps Script)
+ * ------------------------------------------------------------------
+ * WHAT'S NEW IN THIS VERSION:
+ * The booking notification email now includes one-click "Approve" and
+ * "Decline" links. Clicking Approve confirms the booking and blocks
+ * those dates on the site automatically — no need to open the sheet
+ * or edit anything by hand. The sheet is still there as a record of
+ * everything, you just won't normally need to touch it.
+ *
+ * IF YOU ALREADY SET THIS UP ONCE:
+ * Just replace ALL the code in your existing Apps Script project with
+ * this entire file, save, then go to Deploy > Manage deployments >
+ * click the pencil/edit icon on your existing deployment > under
+ * "Version" choose "New version" > Deploy. This keeps your existing
+ * /exec URL working — you do NOT need to create a new deployment or
+ * send me a new URL.
+ *
+ * FIRST-TIME SETUP (about 5 minutes):
+ * 1. Go to sheets.google.com and create a new blank spreadsheet.
+ *    Name it something like "Kalbar Duplex Bookings".
+ * 2. In the sheet, go to Extensions > Apps Script.
+ * 3. Delete any starter code in the editor, then paste in this ENTIRE
+ *    file's contents.
+ * 4. Change OWNER_EMAIL below to your real email address.
+ * 5. Click Deploy > New deployment.
+ *    - Click the gear icon next to "Select type" and choose "Web app".
+ *    - Description: anything, e.g. "Booking API".
+ *    - Execute as: Me.
+ *    - Who has access: Anyone.
+ *    - Click Deploy.
+ * 6. The first time, Google will ask you to authorize the script —
+ *    click Authorize, choose your account, click "Advanced" >
+ *    "Go to (project name) (unsafe)" > Allow. This warning appears
+ *    because it's your own unpublished script, not because anything
+ *    is wrong.
+ * 7. Copy the "Web app URL" it gives you (ends in /exec).
+ * 8. Send that URL back — it gets pasted into API_URL near the top
+ *    of the website's index.html file, replacing the placeholder.
+ *
+ * HOW IT WORKS DAY TO DAY:
+ * - The website's calendar calls this script (GET) to find out which
+ *   dates are already CONFIRMED and greys them out.
+ * - When someone submits the booking form, this script adds a
+ *   "Pending" row to your sheet, emails YOU the details with
+ *   Approve / Decline buttons, and separately emails the GUEST an
+ *   instant "we've received your request" acknowledgment (wording
+ *   differs for company/crew vs holiday requests).
+ * - Click Approve: that booking's dates immediately show as
+ *   unavailable to future site visitors, AND the guest automatically
+ *   gets a confirmation email. Holiday confirmations include the
+ *   3:00pm check-in / 10:30am check-out times. Company confirmations
+ *   include the 1-month cancellation notice policy.
+ * - Click Decline: the request is marked declined, and the guest
+ *   automatically gets a polite email letting them know it wasn't
+ *   available. Either way, nothing more for you to do.
+ * - You can still open the Google Sheet any time to see the full
+ *   history, or to manually change a Status cell if you ever need to
+ *   (e.g. to cancel a confirmed booking, just change its Status away
+ *   from "Confirmed" or delete the row). Note manual edits like this
+ *   will NOT trigger a guest email, only clicking Approve/Decline in
+ *   the notification email does that.
+ * ------------------------------------------------------------------
+ */
+
+const SHEET_NAME = 'Bookings';
+const OWNER_EMAIL = 'retreatandstay@outlook.com';
+
+const HEADERS = [
+  'Timestamp', 'Status', 'Unit', 'CompanyName',
+  'FullName', 'Email', 'Phone', 'CheckIn', 'CheckOut', 'Guests', 'Notes', 'Token'
+];
+
+function doGet(e) {
+  const params = (e && e.parameter) || {};
+
+  if (params.action === 'approve' || params.action === 'decline') {
+    return handleApproval(params);
+  }
+
+  return getAvailability();
+}
+
+function getAvailability() {
+  const sheet = getSheet();
+  const values = sheet.getDataRange().getValues();
+  const headerRow = values[0];
+  const idx = (name) => headerRow.indexOf(name);
+  const blocked = { unit1: [], unit2: [] };
+
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    const status = String(row[idx('Status')] || '').trim().toLowerCase();
+    if (status !== 'confirmed') continue;
+
+    const unitRaw = String(row[idx('Unit')] || '');
+    const unitKey = unitRaw.toLowerCase().indexOf('2') !== -1 ? 'unit2' : 'unit1';
+
+    const checkIn = new Date(row[idx('CheckIn')]);
+    const checkOut = new Date(row[idx('CheckOut')]);
+    if (isNaN(checkIn) || isNaN(checkOut)) continue;
+
+    let d = new Date(checkIn);
+    while (d < checkOut) {
+      blocked[unitKey].push(Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd'));
+      d.setDate(d.getDate() + 1);
+    }
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(blocked))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleApproval(params) {
+  const sheet = getSheet();
+  const headerRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const tokenCol = headerRow.indexOf('Token') + 1;
+  const statusCol = headerRow.indexOf('Status') + 1;
+  const rowNum = parseInt(params.row, 10);
+
+  if (!rowNum || rowNum < 2 || rowNum > sheet.getLastRow()) {
+    return htmlResponse('Sorry, that link looks invalid or the booking no longer exists.');
+  }
+
+  const storedToken = sheet.getRange(rowNum, tokenCol).getValue();
+  if (!storedToken || String(storedToken) !== String(params.token)) {
+    return htmlResponse('Sorry, that link is invalid or has already been used.');
+  }
+
+  const currentStatus = sheet.getRange(rowNum, statusCol).getValue();
+  if (currentStatus !== 'Pending') {
+    return htmlResponse('This booking was already marked "' + currentStatus + '". No changes made.');
+  }
+
+  const newStatus = params.action === 'approve' ? 'Confirmed' : 'Declined';
+  sheet.getRange(rowNum, statusCol).setValue(newStatus);
+
+  notifyGuest(sheet, headerRow, rowNum, newStatus);
+
+  const message = newStatus === 'Confirmed'
+    ? 'Booking confirmed. Those dates now show as unavailable on the website, and the guest has been emailed.'
+    : 'Booking declined. No dates were blocked, and the guest has been emailed.';
+
+  return htmlResponse(message);
+}
+
+function notifyGuest(sheet, headerRow, rowNum, newStatus) {
+  const rowValues = sheet.getRange(rowNum, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const get = (name) => {
+    const i = headerRow.indexOf(name);
+    return i === -1 ? '' : rowValues[i];
+  };
+
+  const guestEmail = get('Email');
+  Logger.log('notifyGuest: guestEmail value = [' + guestEmail + ']');
+  if (!guestEmail) {
+    Logger.log('notifyGuest: guestEmail was empty, no email sent.');
+    return;
+  }
+
+  const guestName = get('FullName') || 'there';
+  const unit = get('Unit') || 'the Kalbar Duplex';
+  const checkIn = get('CheckIn') || '';
+  const checkOut = get('CheckOut') || '';
+
+  if (newStatus === 'Confirmed') {
+    const subject = 'Booking confirmed, Kalbar Duplex';
+    let body =
+      'Hi ' + guestName + ',\n\n' +
+      'Good news, your booking request has been confirmed.\n\n' +
+      'Unit: ' + unit + '\n' +
+      'Your dates are ' + checkIn + ' and ' + checkOut + '\n\n' +
+      'Check-in: any time after 3:00pm on ' + checkIn + '\n' +
+      'Check-out: by 10:30am on ' + checkOut + '\n\n';
+
+    body +=
+      'If you have any questions before your stay, just reply to this email.\n\n' +
+      'Scenic Rim Accommodation';
+    MailApp.sendEmail(guestEmail, subject, body);
+    Logger.log('notifyGuest: MailApp.sendEmail call completed for Confirmed, no exception thrown.');
+  } else {
+    const subject = 'Booking request update, Kalbar Duplex';
+    const body =
+      'Hi ' + guestName + ',\n\n' +
+      'Thanks for your interest in the Kalbar Duplex. Unfortunately we\'re not able to confirm your request for the following dates:\n\n' +
+      'Unit: ' + unit + '\n' +
+      'Check-in: ' + checkIn + '\n' +
+      'Check-out: ' + checkOut + '\n\n' +
+      'Feel free to get in touch if you\'d like to check alternative dates.\n\n' +
+      'Scenic Rim Accommodation';
+    MailApp.sendEmail(guestEmail, subject, body);
+  }
+}
+
+function htmlResponse(message) {
+  return HtmlService.createHtmlOutput(
+    '<div style="font-family:sans-serif;max-width:420px;margin:60px auto;text-align:center;">' +
+    '<h2 style="color:#2b2620;">' + message + '</h2>' +
+    '<p style="color:#7a7264;">You can close this window.</p>' +
+    '</div>'
+  );
+}
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = getSheet();
+    const token = Utilities.getUuid();
+
+    const headerRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const rowValues = headerRow.map(function (h) {
+      switch (h) {
+        case 'Timestamp': return new Date();
+        case 'Status': return 'Pending';
+        case 'Unit': return data.unit || '';
+        case 'CompanyName': return data.companyName || '';
+        case 'FullName': return data.fullName || '';
+        case 'Email': return data.email || '';
+        case 'Phone': return data.phone || '';
+        case 'CheckIn': return data.checkIn || '';
+        case 'CheckOut': return data.checkOut || '';
+        case 'Guests': return data.guests || '';
+        case 'Notes': return data.notes || '';
+        case 'Token': return token;
+        default: return '';
+      }
+    });
+    sheet.appendRow(rowValues);
+    const rowNum = sheet.getLastRow();
+
+    const baseUrl = ScriptApp.getService().getUrl();
+    const approveUrl = baseUrl + '?action=approve&row=' + rowNum + '&token=' + token;
+    const declineUrl = baseUrl + '?action=decline&row=' + rowNum + '&token=' + token;
+
+    const subject = 'New booking request — ' + (data.unit || 'Kalbar Duplex');
+    const plainBody =
+      'New booking request received:\n\n' +
+      'Name: ' + (data.fullName || '') + '\n' +
+      (data.companyName ? 'Company: ' + data.companyName + '\n' : '') +
+      'Email: ' + (data.email || '') + '\n' +
+      'Phone: ' + (data.phone || '') + '\n' +
+      'Unit: ' + (data.unit || '') + '\n' +
+      'Check-in: ' + (data.checkIn || '') + '\n' +
+      'Check-out: ' + (data.checkOut || '') + '\n' +
+      'Guests: ' + (data.guests || '') + '\n' +
+      'Notes: ' + (data.notes || '(none)') + '\n\n' +
+      'Approve: ' + approveUrl + '\n' +
+      'Decline: ' + declineUrl;
+
+    const htmlBody =
+      '<div style="font-family:sans-serif;color:#2b2620;">' +
+      '<h2 style="margin-bottom:4px;">New booking request</h2>' +
+      '<p style="color:#7a7264;margin-top:0;">' + (data.unit || '') + '</p>' +
+      '<table style="border-collapse:collapse;margin:16px 0;">' +
+      '<tr><td style="padding:4px 12px 4px 0;color:#7a7264;">Name</td><td><b>' + (data.fullName || '') + '</b></td></tr>' +
+      (data.companyName ? '<tr><td style="padding:4px 12px 4px 0;color:#7a7264;">Company</td><td>' + data.companyName + '</td></tr>' : '') +
+      '<tr><td style="padding:4px 12px 4px 0;color:#7a7264;">Email</td><td>' + (data.email || '') + '</td></tr>' +
+      '<tr><td style="padding:4px 12px 4px 0;color:#7a7264;">Phone</td><td>' + (data.phone || '') + '</td></tr>' +
+      '<tr><td style="padding:4px 12px 4px 0;color:#7a7264;">Dates</td><td>' + (data.checkIn || '') + ' → ' + (data.checkOut || '') + '</td></tr>' +
+      '<tr><td style="padding:4px 12px 4px 0;color:#7a7264;">Guests</td><td>' + (data.guests || '') + '</td></tr>' +
+      '<tr><td style="padding:4px 12px 4px 0;color:#7a7264;">Notes</td><td>' + (data.notes || '(none)') + '</td></tr>' +
+      '</table>' +
+      '<a href="' + approveUrl + '" style="display:inline-block;white-space:nowrap;background:#3f6b4a;color:#fff;padding:12px 18px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:10px;margin-bottom:8px;">Approve</a>' +
+      '<a href="' + declineUrl + '" style="display:inline-block;white-space:nowrap;background:#a8532c;color:#fff;padding:12px 18px;border-radius:6px;text-decoration:none;font-weight:bold;margin-bottom:8px;">Decline</a>' +
+      '</div>';
+
+    if (OWNER_EMAIL && OWNER_EMAIL.indexOf('example.com') === -1) {
+      MailApp.sendEmail({
+        to: OWNER_EMAIL,
+        subject: subject,
+        body: plainBody,
+        htmlBody: htmlBody
+      });
+    }
+
+    sendGuestAcknowledgment(data);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function sendGuestAcknowledgment(data) {
+  if (!data.email) return;
+
+  const guestName = data.fullName || 'there';
+  const subject = 'We\'ve received your booking request, Kalbar Duplex';
+
+  const body =
+    'Hi ' + guestName + ',\n\n' +
+    'Thanks for your request' + (data.companyName ? ' on behalf of ' + data.companyName : '') + '.\n\n' +
+    'Unit: ' + (data.unit || '') + '\n' +
+    'Check-in: ' + (data.checkIn || '') + '\n' +
+    'Check-out: ' + (data.checkOut || '') + '\n\n' +
+    'The owner will contact you to confirm, either by email or phone.\n\n' +
+    'Scenic Rim Accommodation';
+
+  MailApp.sendEmail(data.email, subject, body);
+}
+
+function testSendEmail() {
+  MailApp.sendEmail(
+    'corinnecause@gmail.com',
+    'Test email from Kalbar Duplex script',
+    'This is a test to confirm the script can send emails to this address.'
+  );
+  Logger.log('testSendEmail: completed without throwing an error.');
+}
+
+function getSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+  }
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(HEADERS);
+    return sheet;
+  }
+  // Self-heal: add any headers (e.g. Token) that are missing from an older sheet.
+  const existing = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  HEADERS.forEach(function (h) {
+    if (existing.indexOf(h) === -1) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h);
+    }
+  });
+  return sheet;
+}
