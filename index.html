@@ -25,7 +25,7 @@
   "alternateName": "Kalbar Duplex House, Fassifern Region Accommodation",
   "description": "Self-contained duplex house in Kalbar, Fassifern Region of the Scenic Rim, QLD. Two units side-by-side, sleeps up to 8 each (4 queen beds), full kitchen, off-street parking. No short stays: 7-night minimum, with better weekly rates the longer you stay. Long stay and workers accommodation, direct booking.",
   "url": "https://scenicrimaccommodation.com/",
-  "priceRange": "Per unit, per week, AUD. 7-13 nights: $1,800/week. 14-27 nights: $1,500/week. Monthly (28-34 nights): $1,300/week. Longer than monthly (35+ nights): $1,000/week.",
+  "priceRange": "Per unit, per week, AUD. 7-13 nights: $1,800/week. 14-27 nights: $1,500/week. Monthly, 28 nights or more: $1,300/week plus utilities. Longer than monthly, 35+ nights: $1,000/week plus utilities.",
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Kalbar",
@@ -125,9 +125,31 @@
   .gallery-grid .ph{grid-column:span 2;}
   .gallery-photo{
     aspect-ratio:4/3;border-radius:10px;overflow:hidden;border:1px solid var(--border);
-    background:#e3e9d8;
+    background:#e3e9d8;cursor:zoom-in;
   }
   .gallery-photo img{width:100%;height:100%;object-fit:cover;}
+
+  .lightbox-overlay{
+    display:none;position:fixed;inset:0;background:rgba(20,24,15,0.92);z-index:1000;
+    align-items:center;justify-content:center;padding:32px;cursor:zoom-out;
+  }
+  .lightbox-overlay.open{display:flex;}
+  .lightbox-overlay img{
+    max-width:92vw;max-height:88vh;width:auto;height:auto;border-radius:10px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.5);cursor:default;
+  }
+  .lightbox-close{
+    position:absolute;top:20px;right:28px;color:#fff;font-size:32px;font-weight:300;
+    background:none;border:none;cursor:pointer;line-height:1;
+  }
+  .lightbox-nav{
+    position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);
+    border:none;color:#fff;font-size:26px;width:48px;height:48px;border-radius:50%;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .lightbox-nav:hover{background:rgba(255,255,255,0.28);}
+  .lightbox-prev{left:20px;}
+  .lightbox-next{right:20px;}
 
   .about-grid{
     display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;max-width:1080px;margin:0 auto;align-items:start;
@@ -322,6 +344,13 @@
   </div>
 </section>
 
+<div class="lightbox-overlay" id="lightboxOverlay">
+  <button type="button" class="lightbox-close" id="lightboxClose">&times;</button>
+  <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrev">&#8249;</button>
+  <img id="lightboxImg" src="" alt="">
+  <button type="button" class="lightbox-nav lightbox-next" id="lightboxNext">&#8250;</button>
+</div>
+
 <section id="about">
   <div class="about-grid">
     <div class="about-text">
@@ -347,8 +376,8 @@
     <p>No short stays, 7-night minimum. Rates below are per unit, the duplex has 2 units, so booking both doubles the rate. The longer you stay, the lower the weekly rate.</p>
     <div class="detail-row"><span class="k">7-13 nights</span><span class="v">$1,800 / week</span></div>
     <div class="detail-row"><span class="k">14-27 nights</span><span class="v">$1,500 / week</span></div>
-    <div class="detail-row"><span class="k">Monthly (28-34 nights)</span><span class="v">$1,300 / week</span></div>
-    <div class="detail-row"><span class="k">Longer than monthly (35+ nights)</span><span class="v">$1,000 / week</span></div>
+    <div class="detail-row"><span class="k">Monthly (28 nights +)</span><span class="v">$1,300 / week + utilities</span></div>
+    <div class="detail-row"><span class="k">Longer than monthly (35+ nights)</span><span class="v">$1,000 / week + utilities</span></div>
   </div>
 
   <div class="gym-callout">
@@ -385,8 +414,8 @@
       </ul>
     </div>
     <div class="type-card company">
-      <div class="tag">Monthly (28-34 nights)</div>
-      <h3>$1,300 / week</h3>
+      <div class="tag">Monthly (28 nights +)</div>
+      <h3>$1,300 / week + utilities</h3>
       <ul>
         <li>A full month, project-length stays</li>
         <li>Full kitchen &amp; self-contained unit, sleeps up to 8</li>
@@ -396,7 +425,7 @@
     </div>
     <div class="type-card holiday">
       <div class="tag">Longer than monthly (35+ nights)</div>
-      <h3>$1,000 / week</h3>
+      <h3>$1,000 / week + utilities</h3>
       <ul>
         <li>Best rate, for extended and ongoing stays</li>
         <li>Full kitchen &amp; self-contained unit, sleeps up to 8</li>
@@ -467,7 +496,7 @@
           </div>
           <div>
             <label>Phone</label>
-            <input type="tel" id="phone" required>
+            <input type="tel" id="phone" placeholder="e.g. 0458 888 186" required>
           </div>
         </div>
 
@@ -709,6 +738,12 @@
       status.textContent = 'Please fill in your name, email and phone.';
       return;
     }
+    const phoneDigits = phone.replace(/\D/g, '');
+    if(phoneDigits.length < 8){
+      status.className = 'err';
+      status.textContent = 'Please enter a valid phone number (at least 8 digits).';
+      return;
+    }
 
     const unitLabel = currentUnit === 'unit1' ? 'Unit 1' : 'Unit 2';
     const payload = {
@@ -758,6 +793,43 @@
         status.className = 'err';
         status.textContent = 'Something went wrong sending your request. Please email ' + SITE_CONTACT_EMAIL + ' or call 0458 888 186 directly.';
       });
+  });
+
+  // ---- Gallery lightbox ----
+  const galleryImgs = Array.from(document.querySelectorAll('.gallery-photo img'));
+  const lightboxOverlay = document.getElementById('lightboxOverlay');
+  const lightboxImg = document.getElementById('lightboxImg');
+  let lightboxIndex = 0;
+
+  function openLightbox(i){
+    lightboxIndex = i;
+    lightboxImg.src = galleryImgs[i].src;
+    lightboxImg.alt = galleryImgs[i].alt;
+    lightboxOverlay.classList.add('open');
+  }
+  function closeLightbox(){
+    lightboxOverlay.classList.remove('open');
+  }
+  function showNext(step){
+    lightboxIndex = (lightboxIndex + step + galleryImgs.length) % galleryImgs.length;
+    lightboxImg.src = galleryImgs[lightboxIndex].src;
+    lightboxImg.alt = galleryImgs[lightboxIndex].alt;
+  }
+
+  galleryImgs.forEach((img, i) => {
+    img.parentElement.addEventListener('click', () => openLightbox(i));
+  });
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  document.getElementById('lightboxPrev').addEventListener('click', (e) => { e.stopPropagation(); showNext(-1); });
+  document.getElementById('lightboxNext').addEventListener('click', (e) => { e.stopPropagation(); showNext(1); });
+  lightboxOverlay.addEventListener('click', (e) => {
+    if(e.target === lightboxOverlay) closeLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if(!lightboxOverlay.classList.contains('open')) return;
+    if(e.key === 'Escape') closeLightbox();
+    if(e.key === 'ArrowLeft') showNext(-1);
+    if(e.key === 'ArrowRight') showNext(1);
   });
 
   document.getElementById('newRequestBtn').addEventListener('click', () => {
