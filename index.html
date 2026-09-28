@@ -243,6 +243,12 @@
   #formStatus.ok{display:block;background:#e2ecda;color:var(--green);}
   #formStatus.err{display:block;background:#f7e6d6;color:#95491e;}
 
+  .success-icon{
+    width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;
+    margin:0 auto 16px;
+  }
+
   footer{
     background:#212a1c;color:#e6ead9;padding:44px 24px 30px;margin-top:20px;
   }
@@ -409,7 +415,7 @@
   </div>
 
   <div class="call-callout">
-    Or, if you'd prefer, contact the owner directly: <a href="tel:0458888186">0458 888 186</a>
+    Or, if you'd prefer, contact the owner directly: call <a href="tel:0458888186">0458 888 186</a> or email <a href="mailto:retreatandstay@outlook.com">retreatandstay@outlook.com</a>
   </div>
 
   <div class="booking-grid">
@@ -472,8 +478,25 @@
           <button type="submit" class="btn-primary">Send booking request</button>
         </div>
         <div id="formStatus"></div>
-        <p class="form-note">Your request goes straight to the owner for confirmation. Please check your spam/junk inbox for our emails. Or call the owner directly on <a href="tel:0458888186" style="color:var(--accent);font-weight:600;">0458 888 186</a>.</p>
+        <p class="form-note">Your request goes straight to the owner for confirmation. Please check your spam/junk inbox for our emails. Or contact the owner directly, call <a href="tel:0458888186" style="color:var(--accent);font-weight:600;">0458 888 186</a> or email <a href="mailto:retreatandstay@outlook.com" style="color:var(--accent);font-weight:600;">retreatandstay@outlook.com</a>.</p>
       </form>
+
+      <div id="bookingSuccess" class="hidden">
+        <div class="success-icon">&#10003;</div>
+        <h3 style="text-align:center;margin-bottom:6px;">Request received!</h3>
+        <p style="text-align:center;color:var(--muted);font-size:14.5px;margin-bottom:18px;">Your booking request has definitely gone through. Here's what was sent:</p>
+        <div class="details-card" style="margin-bottom:18px;">
+          <div class="detail-row"><span class="k">Unit</span><span class="v" id="successUnit"></span></div>
+          <div class="detail-row"><span class="k">Dates</span><span class="v" id="successDates"></span></div>
+          <div class="detail-row"><span class="k">Name</span><span class="v" id="successName"></span></div>
+        </div>
+        <p style="font-size:14.5px;margin-bottom:10px;">The owner will contact you by email or phone to confirm. If you'd like to speed things up, or don't hear back within a day or two, get in touch directly:</p>
+        <p style="text-align:center;margin-bottom:18px;">
+          <a href="tel:0458888186" style="display:inline-block;background:var(--accent);color:#fff;padding:12px 24px;border-radius:6px;font-weight:700;text-decoration:none;margin:4px;">Call 0458 888 186</a>
+          <a href="mailto:retreatandstay@outlook.com" style="display:inline-block;background:transparent;color:var(--accent);border:1px solid var(--accent);padding:12px 24px;border-radius:6px;font-weight:700;text-decoration:none;margin:4px;">Email retreatandstay@outlook.com</a>
+        </p>
+        <button type="button" class="clear-link" id="newRequestBtn">Make another request</button>
+      </div>
     </div>
   </div>
 </section>
@@ -716,8 +739,11 @@
         submitBtn.disabled = false;
         submitBtn.textContent = 'Send booking request';
         if(res.ok){
-          status.className = 'ok';
-          status.textContent = 'Request sent! The owner will contact you to confirm. Please check your spam/junk inbox if you don\'t see our email.';
+          document.getElementById('successUnit').textContent = unitLabel;
+          document.getElementById('successDates').textContent = fmtNice(selStart) + ' → ' + fmtNice(selEnd);
+          document.getElementById('successName').textContent = fullName;
+          this.classList.add('hidden');
+          document.getElementById('bookingSuccess').classList.remove('hidden');
           this.reset();
           selStart = null; selEnd = null;
           renderCalendar();
@@ -732,6 +758,11 @@
         status.className = 'err';
         status.textContent = 'Something went wrong sending your request. Please email ' + SITE_CONTACT_EMAIL + ' or call 0458 888 186 directly.';
       });
+  });
+
+  document.getElementById('newRequestBtn').addEventListener('click', () => {
+    document.getElementById('bookingSuccess').classList.add('hidden');
+    document.getElementById('bookingForm').classList.remove('hidden');
   });
 
   renderCalendar();
